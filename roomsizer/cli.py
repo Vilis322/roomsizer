@@ -25,7 +25,25 @@ from roomsizer.logging_conf import configure_logging
 logger = logging.getLogger(__name__)
 
 # Sanity limits for dimensions (to catch typos)
-MAX_DIMENSION = 100.0  # meters
+# Room dimensions
+MIN_ROOM_WIDTH = 1.5  # meters
+MAX_ROOM_WIDTH = 100.0  # meters
+MIN_ROOM_LENGTH = 1.5  # meters
+MAX_ROOM_LENGTH = 100.0  # meters
+MIN_ROOM_HEIGHT = 2.0  # meters
+MAX_ROOM_HEIGHT = 3.0  # meters
+
+# Opening dimensions
+MIN_WINDOW_WIDTH = 0.3  # meters
+MAX_WINDOW_WIDTH = 5.0  # meters
+MIN_WINDOW_HEIGHT = 0.3  # meters
+MAX_WINDOW_HEIGHT = 3.0  # meters
+MIN_DOOR_WIDTH = 0.6  # meters
+MAX_DOOR_WIDTH = 3.0  # meters
+MIN_DOOR_HEIGHT = 1.8  # meters
+MAX_DOOR_HEIGHT = 3.0  # meters
+
+# Wallpaper roll limits
 MAX_ROLL_LENGTH = 50.0  # meters
 
 
@@ -38,6 +56,7 @@ def read_positive_float(
     prompt: str,
     field_name: str = "value",
     allow_zero: bool = False,
+    min_value: float | None = None,
     max_value: float | None = None,
     input_func: Callable[[str], str] = input,
     output_func: Callable[..., None] = print,
@@ -48,7 +67,8 @@ def read_positive_float(
         prompt: The prompt to display to the user.
         field_name: Name of the field for error messages.
         allow_zero: Whether to allow zero as a valid value.
-        max_value: Maximum allowed value (for sanity checking).
+        min_value: Minimum expected value (for sanity checking).
+        max_value: Maximum expected value (for sanity checking).
         input_func: Function to read input (default: input).
         output_func: Function to write output (default: print).
 
@@ -58,9 +78,15 @@ def read_positive_float(
     Raises:
         UserCancelled: If the user interrupts input.
     """
+    last_out_of_bounds_value: float | None = None
+
     while True:
         try:
-            value = float(input_func(prompt).strip())
+            raw_input = input_func(prompt).strip()
+            # Support both comma and dot as decimal separator
+            normalized_input = raw_input.replace(',', '.')
+            value = float(normalized_input)
+
             if allow_zero and value == 0:
                 return value
             if value <= 0:
@@ -69,17 +95,44 @@ def read_positive_float(
                     file=sys.stderr
                 )
                 continue
+
+            # Check minimum bounds
+            if min_value is not None and value < min_value:
+                # If user entered the same out-of-bounds value again, accept it as confirmed
+                if last_out_of_bounds_value is not None and abs(value - last_out_of_bounds_value) < 0.001:
+                    return value
+
+                last_out_of_bounds_value = value
+                output_func(
+                    f"Warning: {field_name} ({value:.2f}) seems unusually small. "
+                    f"Minimum expected: {min_value:.2f}",
+                    file=sys.stderr
+                )
+                output_func(
+                    "Please re-enter if this was a typo, or enter the same value again to confirm.",
+                    file=sys.stderr
+                )
+                continue
+
+            # Check maximum bounds
             if max_value is not None and value > max_value:
+                # If user entered the same out-of-bounds value again, accept it as confirmed
+                if last_out_of_bounds_value is not None and abs(value - last_out_of_bounds_value) < 0.001:
+                    return value
+
+                last_out_of_bounds_value = value
                 output_func(
                     f"Warning: {field_name} ({value:.2f}) seems unusually large. "
                     f"Maximum expected: {max_value:.2f}",
                     file=sys.stderr
                 )
                 output_func(
-                    "Please re-enter if this was a typo, or continue if correct.",
+                    "Please re-enter if this was a typo, or enter the same value again to confirm.",
                     file=sys.stderr
                 )
                 continue
+
+            # Value is within bounds, accept it
             return value
         except ValueError:
             output_func(
@@ -203,21 +256,24 @@ def get_room_dimensions(
             width = read_positive_float(
                 "Room width (m): ",
                 "room width",
-                max_value=MAX_DIMENSION,
+                min_value=MIN_ROOM_WIDTH,
+                max_value=MAX_ROOM_WIDTH,
                 input_func=input_func,
                 output_func=output_func,
             )
             length = read_positive_float(
                 "Room length (m): ",
                 "room length",
-                max_value=MAX_DIMENSION,
+                min_value=MIN_ROOM_LENGTH,
+                max_value=MAX_ROOM_LENGTH,
                 input_func=input_func,
                 output_func=output_func,
             )
             height = read_positive_float(
                 "Room height (m): ",
                 "room height",
-                max_value=MAX_DIMENSION,
+                min_value=MIN_ROOM_HEIGHT,
+                max_value=MAX_ROOM_HEIGHT,
                 input_func=input_func,
                 output_func=output_func,
             )
@@ -274,14 +330,16 @@ def get_openings(
                 width = read_positive_float(
                     "  Width (m): ",
                     "window width",
-                    max_value=MAX_DIMENSION,
+                    min_value=MIN_WINDOW_WIDTH,
+                    max_value=MAX_WINDOW_WIDTH,
                     input_func=input_func,
                     output_func=output_func,
                 )
                 height = read_positive_float(
                     "  Height (m): ",
                     "window height",
-                    max_value=MAX_DIMENSION,
+                    min_value=MIN_WINDOW_HEIGHT,
+                    max_value=MAX_WINDOW_HEIGHT,
                     input_func=input_func,
                     output_func=output_func,
                 )
@@ -312,14 +370,16 @@ def get_openings(
                 width = read_positive_float(
                     "  Width (m): ",
                     "door width",
-                    max_value=MAX_DIMENSION,
+                    min_value=MIN_DOOR_WIDTH,
+                    max_value=MAX_DOOR_WIDTH,
                     input_func=input_func,
                     output_func=output_func,
                 )
                 height = read_positive_float(
                     "  Height (m): ",
                     "door height",
-                    max_value=MAX_DIMENSION,
+                    min_value=MIN_DOOR_HEIGHT,
+                    max_value=MAX_DOOR_HEIGHT,
                     input_func=input_func,
                     output_func=output_func,
                 )
