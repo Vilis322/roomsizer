@@ -745,3 +745,70 @@ class TestCLIIntegration:
         assert room_warning_line is not None
         # Max warning should NOT appear because room check prevents it
         assert max_warning_line is None
+
+    def test_cli_window_width_exceeds_room_width(self):
+        """Test Case 1: Window width cannot exceed room width (smallest wall).
+
+        Room is 5.5m × 10.0m. Window width of 5.6m should be rejected
+        because it exceeds the smallest wall dimension (5.5m).
+        """
+        responses = [
+            "5.5",      # room width
+            "10.0",     # room length
+            "2.0",      # room height
+            "1",        # number of windows
+            "5.6",      # window width - exceeds smallest wall (5.5m)
+            "5.0",      # window width - valid
+            "1.5",      # window height - valid
+            "0",        # number of doors
+            "0.53",     # roll width
+            "10.05",    # roll length
+            "n",        # no waste allowance
+        ]
+
+        mock_input = MockInput(responses)
+        output = io.StringIO()
+
+        from roomsizer.cli import run_interactive_mode
+
+        exit_code = run_interactive_mode(
+            input_func=mock_input,
+            output_func=lambda *args, **kwargs: output.write(str(args[0]) + "\n"),
+        )
+
+        output_text = output.getvalue()
+        assert exit_code == 0
+        assert "exceeds room width" in output_text
+
+    def test_cli_door_width_exceeds_room_width(self):
+        """Test Case 1: Door width cannot exceed room width (smallest wall).
+
+        Same validation should apply to doors as to windows.
+        """
+        responses = [
+            "5.5",      # room width
+            "10.0",     # room length
+            "2.5",      # room height
+            "0",        # number of windows
+            "1",        # number of doors
+            "5.6",      # door width - exceeds smallest wall (5.5m)
+            "0.9",      # door width - valid
+            "2.0",      # door height - valid
+            "0.53",     # roll width
+            "10.05",    # roll length
+            "n",        # no waste allowance
+        ]
+
+        mock_input = MockInput(responses)
+        output = io.StringIO()
+
+        from roomsizer.cli import run_interactive_mode
+
+        exit_code = run_interactive_mode(
+            input_func=mock_input,
+            output_func=lambda *args, **kwargs: output.write(str(args[0]) + "\n"),
+        )
+
+        output_text = output.getvalue()
+        assert exit_code == 0
+        assert "exceeds room width" in output_text

@@ -432,11 +432,12 @@ def get_openings(
         while True:
             try:
                 # Use room-aware dimension reading with priority checks
-                max_wall_dimension = max(room.width, room.length)
+                # Use minimum wall dimension to ensure opening fits on smallest wall
+                min_wall_dimension = min(room.width, room.length)
                 width = read_opening_dimension(
                     "  Width (m): ",
                     "window width",
-                    room_limit=max_wall_dimension,
+                    room_limit=min_wall_dimension,
                     room_dimension_name="room width",
                     min_value=MIN_WINDOW_WIDTH,
                     max_value=MAX_WINDOW_WIDTH,
@@ -478,11 +479,12 @@ def get_openings(
         while True:
             try:
                 # Use room-aware dimension reading with priority checks
-                max_wall_dimension = max(room.width, room.length)
+                # Use minimum wall dimension to ensure opening fits on smallest wall
+                min_wall_dimension = min(room.width, room.length)
                 width = read_opening_dimension(
                     "  Width (m): ",
                     "door width",
-                    room_limit=max_wall_dimension,
+                    room_limit=min_wall_dimension,
                     room_dimension_name="room width",
                     min_value=MIN_DOOR_WIDTH,
                     max_value=MAX_DOOR_WIDTH,
