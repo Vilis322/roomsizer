@@ -1,0 +1,5 @@
+# Testing framework
+pytest>=8.0.0
+
+# Test coverage (optional but recommended)
+pytest-cov>=4.1.0
