@@ -27,9 +27,9 @@ logger = logging.getLogger(__name__)
 # Sanity limits for dimensions (to catch typos)
 # Room dimensions
 MIN_ROOM_WIDTH = 1.5  # meters
-MAX_ROOM_WIDTH = 100.0  # meters
+MAX_ROOM_WIDTH = 25.0  # meters
 MIN_ROOM_LENGTH = 1.5  # meters
-MAX_ROOM_LENGTH = 100.0  # meters
+MAX_ROOM_LENGTH = 30.0  # meters
 MIN_ROOM_HEIGHT = 2.0  # meters
 MAX_ROOM_HEIGHT = 3.0  # meters
 
@@ -344,6 +344,15 @@ def get_openings(
                     output_func=output_func,
                 )
 
+                # Check if opening height exceeds room height
+                if height > room.height:
+                    output_func(
+                        f"  Warning: Window height ({height:.2f} m) exceeds room height ({room.height:.2f} m).",
+                        file=sys.stderr
+                    )
+                    output_func("  Please re-enter the window dimensions.", file=sys.stderr)
+                    continue
+
                 opening = Opening(width, height, OpeningKind.WINDOW)
                 room.add_opening(opening)
                 logger.info("[CLI] Added window %d: %.2f m × %.2f m", i + 1, width, height)
@@ -383,6 +392,15 @@ def get_openings(
                     input_func=input_func,
                     output_func=output_func,
                 )
+
+                # Check if opening height exceeds room height
+                if height > room.height:
+                    output_func(
+                        f"  Warning: Door height ({height:.2f} m) exceeds room height ({room.height:.2f} m).",
+                        file=sys.stderr
+                    )
+                    output_func("  Please re-enter the door dimensions.", file=sys.stderr)
+                    continue
 
                 opening = Opening(width, height, OpeningKind.DOOR)
                 room.add_opening(opening)

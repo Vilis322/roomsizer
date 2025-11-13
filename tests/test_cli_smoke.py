@@ -606,10 +606,10 @@ class TestCLIIntegration:
     def test_cli_confirmation_on_repeated_value(self):
         """Test Case 6: Re-entering same out-of-bounds value accepts it."""
         responses = [
-            "200",      # room width - too large
-            "200",      # confirm by entering same value
-            "200",      # room length - too large
-            "200",      # confirm by entering same value
+            "30",       # room width - too large (max 25m)
+            "30",       # confirm by entering same value
+            "35",       # room length - too large (max 30m)
+            "35",       # confirm by entering same value
             "2.5",      # room height - valid
             "0",        # number of windows
             "0",        # number of doors
@@ -633,3 +633,65 @@ class TestCLIIntegration:
         # Should show warning but eventually accept
         assert "unusually large" in output_text
         assert "Room created" in output_text or "Room Dimensions" in output_text
+
+    def test_cli_opening_height_exceeds_room_height_window(self):
+        """Test that window height cannot exceed room height."""
+        responses = [
+            "5.0",      # room width
+            "4.0",      # room length
+            "2.5",      # room height
+            "1",        # number of windows
+            "1.0",      # window width
+            "3.0",      # window height - exceeds room height (2.5m)
+            "1.0",      # window width (retry)
+            "2.0",      # window height - valid
+            "0",        # number of doors
+            "0.53",     # roll width
+            "10.05",    # roll length
+            "n",        # no waste allowance
+        ]
+
+        mock_input = MockInput(responses)
+        output = io.StringIO()
+
+        from roomsizer.cli import run_interactive_mode
+
+        exit_code = run_interactive_mode(
+            input_func=mock_input,
+            output_func=lambda *args, **kwargs: output.write(str(args[0]) + "\n"),
+        )
+
+        output_text = output.getvalue()
+        assert exit_code == 0
+        assert "exceeds room height" in output_text
+
+    def test_cli_opening_height_exceeds_room_height_door(self):
+        """Test that door height cannot exceed room height."""
+        responses = [
+            "5.0",      # room width
+            "4.0",      # room length
+            "2.5",      # room height
+            "0",        # number of windows
+            "1",        # number of doors
+            "0.9",      # door width
+            "2.8",      # door height - exceeds room height (2.5m)
+            "0.9",      # door width (retry)
+            "2.0",      # door height - valid
+            "0.53",     # roll width
+            "10.05",    # roll length
+            "n",        # no waste allowance
+        ]
+
+        mock_input = MockInput(responses)
+        output = io.StringIO()
+
+        from roomsizer.cli import run_interactive_mode
+
+        exit_code = run_interactive_mode(
+            input_func=mock_input,
+            output_func=lambda *args, **kwargs: output.write(str(args[0]) + "\n"),
+        )
+
+        output_text = output.getvalue()
+        assert exit_code == 0
+        assert "exceeds room height" in output_text
