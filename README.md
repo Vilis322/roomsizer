@@ -245,27 +245,6 @@ This project meets the following quality criteria:
 - `0`: Success or user cancellation
 - `1`: Error during calculation or invalid input
 
-## Contributing
-
-### Code Style
-
-- Follow PEP 8 guidelines
-- Use type hints for all function signatures
-- Write Google-style docstrings
-- Keep functions focused and testable
-- Use lazy logging formatting: `logger.debug("Value: %s", value)`
-
-### Adding Tests
-
-All new features must include:
-- Unit tests for domain logic
-- Integration tests for CLI (if applicable)
-- Edge case and error condition tests
-
-## License
-
-[Add your license here]
-
 ## Acknowledgments
 
 Built with Python 3.10+, following Domain-Driven Design and Clean Architecture principles.
