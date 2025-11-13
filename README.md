@@ -1,56 +1,64 @@
 # RoomSizer - Wallpaper Calculator
 
-A production-ready Python CLI application for calculating the number of wallpaper rolls needed for a room, accounting for windows, doors, and pattern matching requirements.
+A Python CLI application for calculating the number of wallpaper rolls needed for a room, with support for windows, doors, and pattern matching requirements.
 
 ## Features
 
 ### Core Functionality
-- **Accurate Strip-Based Calculation**: Implements the correct wallpaper algorithm that accounts for:
-  - Vertical strips cut from rolls based on room height
-  - Pattern matching allowance (drop allowance)
-  - Room perimeter-based strip counting
-  - Strip savings from windows and doors
-  - Configurable waste factor for reserves
+- **Strip-Based Calculation**: Implements wallpaper calculation using vertical strips:
+  - Calculates strips needed based on room perimeter and roll width
+  - Accounts for room height and roll length
+  - Handles pattern matching allowance (drop allowance)
+  - Deducts strips saved by windows and doors
+  - Supports configurable waste factor for extra rolls
 
-- **Comprehensive Validation**: Robust input validation ensuring:
-  - All dimensions are positive
-  - Opening dimensions are plausible for the room
-  - Total opening area is less than wall area
+- **Input Validation**: Validates all inputs to ensure:
+  - Dimensions are positive numbers
+  - Opening dimensions don't exceed room dimensions
+  - Wallpaper roll dimensions are valid
   - Roll length is sufficient for at least one strip
 
-- **Flexible Waste Policies**: Strategy pattern implementation for handling:
-  - Pattern matching allowance (extra length per strip)
-  - Global waste factor (percentage of extra rolls)
+- **Waste Policies**: Configurable waste handling with:
+  - Pattern matching allowance (extra length per strip for pattern alignment)
+  - Global waste factor (percentage multiplier for extra rolls)
 
 ### User Interface
-- **Interactive CLI Mode**: User-friendly prompts for room dimensions, openings, and wallpaper specifications
-- **Non-Interactive Mode**: Command-line arguments for automation and scripting
-- **Clear Error Messages**: English-only, informative error messages with retry logic
-- **Input Sanitization**: Guards against typos with sanity checks on dimensions
+- **Interactive CLI Mode**: Step-by-step prompts guide users through:
+  - Room dimensions (width, length, height)
+  - Window specifications (count and dimensions)
+  - Door specifications (count and dimensions)
+  - Wallpaper roll specifications
+  - Optional waste allowance settings
+
+- **Non-Interactive Mode**: Command-line arguments for automation:
+  - All parameters can be specified via flags
+  - Default dimensions for windows and doors
+  - Suitable for scripting and batch processing
+
+- **Clear Error Messages**: Informative error messages in English with retry logic for invalid inputs
 
 ### Architecture & Design
-- **Hexagonal Architecture**: Clean separation of domain logic and infrastructure
-- **Abstract Base Classes (Ports)**: Well-defined interfaces for all domain components
-- **Strategy Pattern**: Pluggable waste policy and calculator strategies
-- **Immutable Value Objects**: Thread-safe, frozen dataclasses for Opening and WastePolicy
-- **Type Safety**: Full type hints throughout the codebase
+- **Hexagonal Architecture**: Separation between domain logic (`domain.py`) and infrastructure (`cli.py`)
+- **Abstract Base Classes**: Port interfaces defined in `ports.py` for extensibility
+- **Strategy Pattern**: Pluggable `WastePolicy` implementation
+- **Immutable Value Objects**: Frozen dataclasses for `Opening` and `WastePolicy`
+- **Type Safety**: Type hints throughout the codebase
 - **Encapsulation**: Private fields with property accessors in domain models
 
 ### Code Quality
-- **Comprehensive Test Suite**: 76 tests covering:
-  - Happy paths and edge cases
-  - Input validation and error handling
-  - Domain logic accuracy
-  - CLI integration smoke tests
-- **Logging**: Dual-channel logging (console INFO, file DEBUG) with configurable levels
-- **Documentation**: Google-style docstrings for all public APIs
-- **Performance**: Lazy logging formatting and __slots__ optimization
+- **Test Suite**: 91 tests covering:
+  - Core calculation logic
+  - Input validation and edge cases
+  - Domain model behavior
+  - CLI integration scenarios
+- **Logging**: Dual-channel logging (console INFO, file DEBUG) with environment-based configuration
+- **Documentation**: Docstrings for public APIs
+- **Performance**: Optimized with `__slots__` for memory efficiency
 
 ## Installation
 
 ### Prerequisites
 - Python 3.10 or higher
-- pip (Python package manager)
 
 ### Setup
 
@@ -60,16 +68,18 @@ git clone <repository-url>
 cd roomsizer
 ```
 
-2. (Optional) Create a virtual environment:
+2. (Optional but recommended) Create a virtual environment:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies (if any):
+3. Install testing dependencies (optional, only needed for running tests):
 ```bash
-pip install -r requirements.txt  # If you add dependencies later
+pip install -r requirements.txt
 ```
+
+The application itself has no runtime dependencies beyond Python's standard library.
 
 ## Usage
 
@@ -182,28 +192,28 @@ python -m pytest tests/test_room.py -v
 
 ### Test Coverage
 
-- **Domain Logic**: 100% coverage of Room, Opening, WastePolicy, and Calculator classes
-- **Input Validation**: All edge cases and error conditions tested
-- **CLI**: Smoke tests verify end-to-end functionality
-- **Total**: 76 tests, all passing
+The test suite includes 91 tests covering:
+- **Domain Logic**: Room, Opening, WastePolicy, and StripBasedRollsCalculator classes
+- **Input Validation**: Edge cases and error conditions
+- **CLI**: Smoke tests for end-to-end functionality
 
 ## Algorithm Details
 
-### Correct Strip-Based Calculation
+### Strip-Based Calculation
 
-The calculator uses the industry-standard approach:
+The calculator implements the following logic:
 
-1. **Strip Height**: `room_height + drop_allowance`
-2. **Strips Per Roll**: `floor(roll_length / strip_height)`
-3. **Strips Needed**: `ceil(room_perimeter / roll_width)`
-4. **Strips Saved**: Sum of strips saved by each opening:
-   - Horizontal span: `floor(opening_width / roll_width)`
-   - Vertical span: `ceil(opening_height / strip_height)`
-   - Saved: `horizontal_span × vertical_span`
-5. **Net Strips**: `max(0, strips_needed - strips_saved)`
+1. **Strip Height**: `room_height + drop_allowance` (accounts for pattern matching)
+2. **Strips Per Roll**: `floor(roll_length / strip_height)` (complete strips from each roll)
+3. **Strips Needed**: `ceil(room_perimeter / roll_width)` (strips to cover room perimeter)
+4. **Strips Saved**: For each opening (window/door):
+   - Horizontal span: `floor(opening_width / roll_width)` (strips wide)
+   - Vertical span: `ceil(opening_height / strip_height)` (strips tall)
+   - Saved strips: `horizontal_span × vertical_span`
+5. **Net Strips**: `max(0, strips_needed - total_strips_saved)`
 6. **Final Rolls**: `ceil((net_strips × extra_factor) / strips_per_roll)`
 
-This approach correctly models how wallpaper is actually applied as vertical strips around the perimeter.
+The `extra_factor` allows adding a percentage of extra rolls (e.g., 1.1 for 10% extra) for waste and reserves.
 
 ## Configuration
 
@@ -224,27 +234,15 @@ export LOG_DIR=/var/log/roomsizer
 python -m roomsizer.cli
 ```
 
-## Definition of Done (DoD)
-
-This project meets the following quality criteria:
-
-- [x] **Correct Algorithm**: Implements strip-based wallpaper calculation with pattern matching
-- [x] **Type Safety**: Full type hints with Python 3.10+ syntax (`str | None`)
-- [x] **Documentation**: Google-style docstrings for all public APIs
-- [x] **Testing**: Comprehensive test suite with 76 tests covering all scenarios
-- [x] **Validation**: Robust input validation with clear error messages
-- [x] **Logging**: Dual-channel logging (console + file) with configurable levels
-- [x] **English-Only**: All user-facing text and documentation in English
-- [x] **OOP Design**: Proper encapsulation, inheritance, and design patterns
-- [x] **No Business Logic in CLI**: Clean separation of concerns
-- [x] **Multiple Interfaces**: Both interactive and non-interactive CLI modes
-- [x] **Production-Ready**: Error handling, logging, validation, and testability
-
 ## Exit Codes
 
 - `0`: Success or user cancellation
 - `1`: Error during calculation or invalid input
 
-## Acknowledgments
+## Technical Details
 
-Built with Python 3.10+, following Domain-Driven Design and Clean Architecture principles.
+- **Language**: Python 3.10+
+- **Architecture**: Hexagonal Architecture (Ports and Adapters)
+- **Design Patterns**: Strategy Pattern, Facade Pattern, Value Objects
+- **Testing**: pytest
+- **Dependencies**: Standard library only (no external runtime dependencies)
