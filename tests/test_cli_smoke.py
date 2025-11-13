@@ -695,3 +695,53 @@ class TestCLIIntegration:
         output_text = output.getvalue()
         assert exit_code == 0
         assert "exceeds room height" in output_text
+
+    def test_cli_room_dimension_check_priority(self):
+        """Test that room dimension checks happen BEFORE min/max validation.
+
+        This tests the case from BUG_BODY.md where entering 3.1 for window height
+        in a room with 3.0m height should show room height warning FIRST,
+        not the max bounds warning.
+        """
+        responses = [
+            "5.0",      # room width
+            "4.0",      # room length
+            "3.0",      # room height
+            "1",        # number of windows
+            "0.9",      # window width
+            "3.1",      # window height - exceeds both room height (3.0m) AND max (3.0m)
+            "2.5",      # window height - valid
+            "0",        # number of doors
+            "0.53",     # roll width
+            "10.05",    # roll length
+            "n",        # no waste allowance
+        ]
+
+        mock_input = MockInput(responses)
+        output = io.StringIO()
+
+        from roomsizer.cli import run_interactive_mode
+
+        exit_code = run_interactive_mode(
+            input_func=mock_input,
+            output_func=lambda *args, **kwargs: output.write(str(args[0]) + "\n"),
+        )
+
+        output_text = output.getvalue()
+        assert exit_code == 0
+        # Should show room dimension warning, not max value warning
+        assert "exceeds room height" in output_text
+        # The first warning should be about room height, not about max value
+        lines = output_text.split('\n')
+        room_warning_line = None
+        max_warning_line = None
+        for i, line in enumerate(lines):
+            if "exceeds room height" in line and room_warning_line is None:
+                room_warning_line = i
+            if "unusually large" in line and "3.10" in line and max_warning_line is None:
+                max_warning_line = i
+
+        # Room warning should appear (and it should NOT show max warning since room check comes first)
+        assert room_warning_line is not None
+        # Max warning should NOT appear because room check prevents it
+        assert max_warning_line is None
