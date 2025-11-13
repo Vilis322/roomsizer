@@ -3,3 +3,6 @@ pytest>=8.0.0
 
 # Test coverage (optional but recommended)
 pytest-cov>=4.1.0
+
+# Web UI framework
+flask>=3.0.0

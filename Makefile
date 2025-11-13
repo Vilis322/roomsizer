@@ -1,4 +1,4 @@
-.PHONY: help run test create-venv delete-venv install-requirements
+.PHONY: help run-cli run-app test create-venv delete-venv install-requirements
 
 # Variables
 VENV_DIR = venv
@@ -14,10 +14,14 @@ help:
 	@echo "  make delete-venv          - Delete virtual environment if it exists"
 	@echo "  make install-requirements - Install dependencies from requirements.txt"
 	@echo "  make test                 - Run all tests with pytest"
-	@echo "  make run                  - Run the wallpaper calculator application"
+	@echo "  make run-cli              - Run the CLI wallpaper calculator"
+	@echo "  make run-app              - Run the web UI application (Flask)"
 	@echo ""
-	@echo "Quick start:"
-	@echo "  make create-venv && make install-requirements && make run"
+	@echo "Quick start (CLI):"
+	@echo "  make create-venv && make install-requirements && make run-cli"
+	@echo ""
+	@echo "Quick start (Web UI):"
+	@echo "  make create-venv && make install-requirements && make run-app"
 
 create-venv:
 	@if [ -d "$(VENV_DIR)" ]; then \
@@ -59,11 +63,22 @@ test:
 	@echo "Running tests..."
 	@$(PYTEST) tests/ -v
 
-run:
+run-cli:
 	@if [ ! -d "$(VENV_DIR)" ]; then \
 		echo "Error: Virtual environment not found. Run 'make create-venv' first."; \
 		exit 1; \
 	fi
-	@echo "Starting RoomSizer Wallpaper Calculator..."
-	@echo "========================================"
+	@echo "Starting RoomSizer Wallpaper Calculator (CLI)..."
+	@echo "================================================"
 	@$(PYTHON) -m roomsizer.cli
+
+run-app:
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "Error: Virtual environment not found. Run 'make create-venv' first."; \
+		exit 1; \
+	fi
+	@echo "Starting RoomSizer Web Application..."
+	@echo "======================================"
+	@echo "Open your browser at: http://localhost:5001"
+	@echo ""
+	@$(PYTHON) app.py

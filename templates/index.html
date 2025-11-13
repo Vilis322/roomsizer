@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RoomSizer - Wallpaper Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group small {
+            margin-top: 5px;
+            color: #6c757d;
+            font-size: 0.85em;
+        }
+
+        .opening-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid #dee2e6;
+            position: relative;
+        }
+
+        .opening-item .form-row {
+            margin-bottom: 0;
+        }
+
+        .btn-remove-opening {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background 0.3s;
+        }
+
+        .btn-remove-opening:hover {
+            background: #c82333;
+        }
+
+        .btn-add-opening {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-add-opening:hover {
+            background: #218838;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-calculate:active {
+            transform: translateY(0);
+        }
+
+        .btn-calculate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-box h3 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .result-box p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-detail {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .result-detail strong {
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .result-detail span {
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .error-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .error-box strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .warning-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .warning-box p {
+            margin-bottom: 15px;
+        }
+
+        .warning-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-warning-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn-warning-confirm {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning-confirm:hover {
+            background: #218838;
+        }
+
+        .btn-warning-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-warning-cancel:hover {
+            background: #5a6268;
+        }
+
+        .input-warning {
+            border-color: #ffc107 !important;
+            background-color: #fff3cd !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .loading::after {
+            content: "⏳";
+            font-size: 2em;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .form-section {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📏 RoomSizer</h1>
+            <p>Calculate exactly how many wallpaper rolls you need</p>
+        </div>
+
+        <div class="content">
+            <form id="calculatorForm">
+                <!-- Room Dimensions Section -->
+                <div class="form-section">
+                    <h2>🏠 Room Dimensions</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="roomWidth">Width (meters)</label>
+                            <input type="number" id="roomWidth" name="roomWidth" step="0.01" min="0.01" required>
+                            <small>Standard range: 1.5m - 25m</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="roomLength">Length (meters)</label>
+                            <input type="number" id="roomLength" name="roomLength" step="0.01" min="0.01" required>
+                            <small>Standard range: 1.5m - 30m</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="roomHeight">Height (meters)</label>
+                            <input type="number" id="roomHeight" name="roomHeight" step="0.01" min="0.01" required>
+                            <small>Standard range: 2.0m - 3.0m</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Openings Section -->
+                <div class="form-section">
+                    <h2>🚪 Windows & Doors</h2>
+                    <div id="openingsContainer">
+                        <p style="color: #6c757d; margin-bottom: 15px;">Add windows and doors to reduce wallpaper needed</p>
+                    </div>
+                    <button type="button" class="btn-add-opening" onclick="addOpening()">+ Add Window/Door</button>
+                </div>
+
+                <!-- Wallpaper Roll Specifications -->
+                <div class="form-section">
+                    <h2>📜 Wallpaper Roll Specifications</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="rollWidth">Roll Width (meters)</label>
+                            <input type="number" id="rollWidth" name="rollWidth" step="0.01" min="0.1" value="0.53" required>
+                            <small>Standard: 0.53m or 1.06m</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="rollLength">Roll Length (meters)</label>
+                            <input type="number" id="rollLength" name="rollLength" step="0.01" min="1" max="50" value="10.05" required>
+                            <small>Standard: 10.05m</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Waste Policy Section -->
+                <div class="form-section">
+                    <h2>♻️ Waste Policy</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dropAllowance">Drop Allowance (meters)</label>
+                            <input type="number" id="dropAllowance" name="dropAllowance" step="0.01" min="0" value="0" required>
+                            <small>Extra length per strip for pattern matching</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="extraFactor">Extra Factor</label>
+                            <input type="number" id="extraFactor" name="extraFactor" step="0.01" min="1.0" value="1.0" required>
+                            <small>Waste multiplier (1.1 = 10% extra)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculate Button -->
+                <button type="submit" class="btn-calculate">Calculate Wallpaper Needed</button>
+            </form>
+
+            <!-- Loading Indicator -->
+            <div class="loading" id="loading"></div>
+
+            <!-- Warning Box -->
+            <div class="warning-box" id="warningBox">
+                <strong>Unusual Value Detected</strong>
+                <p id="warningMessage"></p>
+                <div class="warning-actions">
+                    <button type="button" class="btn-warning-action btn-warning-confirm" onclick="confirmWarning()">Yes, this is correct</button>
+                    <button type="button" class="btn-warning-action btn-warning-cancel" onclick="cancelWarning()">Let me fix it</button>
+                </div>
+            </div>
+
+            <!-- Error Box -->
+            <div class="error-box" id="errorBox">
+                <strong>Error</strong>
+                <span id="errorMessage"></span>
+            </div>
+
+            <!-- Result Box -->
+            <div class="result-box" id="resultBox">
+                <h3 id="rollsNeeded">0</h3>
+                <p>Wallpaper rolls needed</p>
+                <div class="result-details">
+                    <div class="result-detail">
+                        <strong>Total Wall Area</strong>
+                        <span id="wallArea">0 m²</span>
+                    </div>
+                    <div class="result-detail">
+                        <strong>Net Wall Area</strong>
+                        <span id="netWallArea">0 m²</span>
+                    </div>
+                    <div class="result-detail">
+                        <strong>Perimeter</strong>
+                        <span id="perimeter">0 m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Standard range definitions (from CLI)
+        const RANGES = {
+            roomWidth: { min: 1.5, max: 25.0, label: 'Room width' },
+            roomLength: { min: 1.5, max: 30.0, label: 'Room length' },
+            roomHeight: { min: 2.0, max: 3.0, label: 'Room height' },
+            windowWidth: { min: 0.3, max: 5.0, label: 'Window width' },
+            windowHeight: { min: 0.3, max: 3.0, label: 'Window height' },
+            doorWidth: { min: 0.6, max: 3.0, label: 'Door width' },
+            doorHeight: { min: 1.8, max: 3.0, label: 'Door height' }
+        };
+
+        let openingCounter = 0;
+        let windowCounter = 0;
+        let doorCounter = 0;
+        let confirmedValues = new Set(); // Track confirmed unusual values
+        let pendingValidation = null; // Current field awaiting confirmation
+
+        // Normalize comma to dot for decimal input
+        function normalizeDecimal(value) {
+            if (typeof value === 'string') {
+                return value.replace(',', '.');
+            }
+            return value;
+        }
+
+        // Add event listeners to all number inputs to support comma
+        function enableCommaSupport() {
+            const numberInputs = document.querySelectorAll('input[type="number"], input[type="text"][pattern*="[0-9]"]');
+            numberInputs.forEach(input => {
+                // Remove existing listener if any
+                input.removeEventListener('input', handleCommaInput);
+                // Add listener
+                input.addEventListener('input', handleCommaInput);
+            });
+        }
+
+        function handleCommaInput(e) {
+            // Replace comma with dot in the input value
+            if (this.value.includes(',')) {
+                const cursorPos = this.selectionStart;
+                this.value = this.value.replace(/,/g, '.');
+                this.setSelectionRange(cursorPos, cursorPos);
+            }
+        }
+
+        function getOpeningLabel(type, number) {
+            return `${type} #${number}`;
+        }
+
+        function addOpening() {
+            openingCounter++;
+            const container = document.getElementById('openingsContainer');
+            const openingDiv = document.createElement('div');
+            openingDiv.className = 'opening-item';
+            openingDiv.id = `opening-${openingCounter}`;
+            openingDiv.setAttribute('data-counter', openingCounter);
+
+            // Temporary label, will be updated when type is selected
+            openingDiv.innerHTML = `
+                <button type="button" class="btn-remove-opening" onclick="removeOpening(${openingCounter})">Remove</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="openingKind[]" class="opening-type" data-opening-id="${openingCounter}" required onchange="updateOpeningType(this)">
+                            <option value="WINDOW">Window</option>
+                            <option value="DOOR">Door</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Width (meters)</label>
+                        <input type="text" name="openingWidth[]" class="opening-dimension" data-opening-id="${openingCounter}" data-dimension="width" step="0.01" pattern="[0-9]+([.,][0-9]+)?" required>
+                        <small class="opening-hint">Standard range: 0.3m - 5.0m</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Height (meters)</label>
+                        <input type="text" name="openingHeight[]" class="opening-dimension" data-opening-id="${openingCounter}" data-dimension="height" step="0.01" pattern="[0-9]+([.,][0-9]+)?" required>
+                        <small class="opening-hint">Standard range: 0.3m - 3.0m</small>
+                    </div>
+                </div>
+            `;
+            container.appendChild(openingDiv);
+
+            // Initialize as window by default
+            windowCounter++;
+            openingDiv.setAttribute('data-type', 'WINDOW');
+            openingDiv.setAttribute('data-type-number', windowCounter);
+
+            // Enable comma support for new inputs
+            enableCommaSupport();
+        }
+
+        function updateOpeningType(selectElement) {
+            const openingId = selectElement.getAttribute('data-opening-id');
+            const parent = document.getElementById(`opening-${openingId}`);
+            const hints = parent.querySelectorAll('.opening-hint');
+            const type = selectElement.value;
+
+            // Update type numbering
+            const oldType = parent.getAttribute('data-type');
+            if (oldType !== type) {
+                if (type === 'WINDOW') {
+                    windowCounter++;
+                    parent.setAttribute('data-type', 'WINDOW');
+                    parent.setAttribute('data-type-number', windowCounter);
+                    hints[0].textContent = 'Standard range: 0.3m - 5.0m';
+                    hints[1].textContent = 'Standard range: 0.3m - 3.0m';
+                } else if (type === 'DOOR') {
+                    doorCounter++;
+                    parent.setAttribute('data-type', 'DOOR');
+                    parent.setAttribute('data-type-number', doorCounter);
+                    hints[0].textContent = 'Standard range: 0.6m - 3.0m';
+                    hints[1].textContent = 'Standard range: 1.8m - 3.0m';
+                }
+            }
+        }
+
+        function removeOpening(id) {
+            const element = document.getElementById(`opening-${id}`);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        function showError(message) {
+            const errorBox = document.getElementById('errorBox');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorBox.style.display = 'block';
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('warningBox').style.display = 'none';
+        }
+
+        function showResult(data) {
+            document.getElementById('errorBox').style.display = 'none';
+            document.getElementById('warningBox').style.display = 'none';
+            const resultBox = document.getElementById('resultBox');
+            document.getElementById('rollsNeeded').textContent = data.rollsNeeded;
+            document.getElementById('wallArea').textContent = `${data.wallArea} m²`;
+            document.getElementById('netWallArea').textContent = `${data.netWallArea} m²`;
+            document.getElementById('perimeter').textContent = `${data.perimeter} m`;
+            resultBox.style.display = 'block';
+        }
+
+        function showWarning(message, field) {
+            const warningBox = document.getElementById('warningBox');
+            const warningMessage = document.getElementById('warningMessage');
+            warningMessage.textContent = message;
+            warningBox.style.display = 'block';
+            document.getElementById('errorBox').style.display = 'none';
+            document.getElementById('resultBox').style.display = 'none';
+
+            // Highlight the field
+            field.classList.add('input-warning');
+            pendingValidation = field;
+
+            // Scroll to warning
+            warningBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function confirmWarning() {
+            if (pendingValidation) {
+                // Mark this value as confirmed
+                const key = getFieldKey(pendingValidation);
+                confirmedValues.add(key);
+                pendingValidation.classList.remove('input-warning');
+                pendingValidation = null;
+            }
+            document.getElementById('warningBox').style.display = 'none';
+            // Re-submit the form
+            document.getElementById('calculatorForm').dispatchEvent(new Event('submit'));
+        }
+
+        function cancelWarning() {
+            if (pendingValidation) {
+                pendingValidation.classList.remove('input-warning');
+                pendingValidation.focus();
+                pendingValidation = null;
+            }
+            document.getElementById('warningBox').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function getFieldKey(field) {
+            // Create unique key for field including its value
+            let key = '';
+            if (field.id) {
+                key = field.id + '_' + normalizeDecimal(field.value);
+            } else {
+                // For openings, use data attributes
+                const openingId = field.getAttribute('data-opening-id');
+                const dimension = field.getAttribute('data-dimension');
+                key = `opening_${openingId}_${dimension}_` + normalizeDecimal(field.value);
+            }
+            return key;
+        }
+
+        function validateValue(field, value, range, location) {
+            const key = getFieldKey(field);
+
+            // If already confirmed, skip validation
+            if (confirmedValues.has(key)) {
+                return true;
+            }
+
+            if (value < range.min) {
+                return {
+                    valid: false,
+                    message: `The ${range.label} you entered for ${location} (${value.toFixed(2)} m) seems unusually small. Standard minimum: ${range.min.toFixed(2)} m. Are you sure there is no typo?`
+                };
+            }
+
+            if (value > range.max) {
+                return {
+                    valid: false,
+                    message: `The ${range.label} you entered for ${location} (${value.toFixed(2)} m) seems unusually large. Standard maximum: ${range.max.toFixed(2)} m. Are you sure there is no typo?`
+                };
+            }
+
+            return true;
+        }
+
+        document.getElementById('calculatorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Hide previous results/errors/warnings
+            document.getElementById('errorBox').style.display = 'none';
+            document.getElementById('resultBox').style.display = 'none';
+
+            // Validate room dimensions
+            const roomWidthField = document.getElementById('roomWidth');
+            const roomLengthField = document.getElementById('roomLength');
+            const roomHeightField = document.getElementById('roomHeight');
+
+            const roomWidth = parseFloat(normalizeDecimal(roomWidthField.value));
+            const roomLength = parseFloat(normalizeDecimal(roomLengthField.value));
+            const roomHeight = parseFloat(normalizeDecimal(roomHeightField.value));
+
+            const widthValidation = validateValue(roomWidthField, roomWidth, RANGES.roomWidth, 'room width');
+            if (widthValidation !== true) {
+                showWarning(widthValidation.message, roomWidthField);
+                return;
+            }
+
+            const lengthValidation = validateValue(roomLengthField, roomLength, RANGES.roomLength, 'room length');
+            if (lengthValidation !== true) {
+                showWarning(lengthValidation.message, roomLengthField);
+                return;
+            }
+
+            const heightValidation = validateValue(roomHeightField, roomHeight, RANGES.roomHeight, 'room height');
+            if (heightValidation !== true) {
+                showWarning(heightValidation.message, roomHeightField);
+                return;
+            }
+
+            // Validate opening dimensions
+            const openingKinds = document.getElementsByName('openingKind[]');
+            const openingWidths = document.getElementsByName('openingWidth[]');
+            const openingHeights = document.getElementsByName('openingHeight[]');
+
+            for (let i = 0; i < openingKinds.length; i++) {
+                const openingType = openingKinds[i].value;
+                const widthField = openingWidths[i];
+                const heightField = openingHeights[i];
+                const width = parseFloat(normalizeDecimal(widthField.value));
+                const height = parseFloat(normalizeDecimal(heightField.value));
+
+                // Get opening label
+                const openingId = widthField.getAttribute('data-opening-id');
+                const openingDiv = document.getElementById(`opening-${openingId}`);
+                const typeNumber = openingDiv.getAttribute('data-type-number');
+                const openingLabel = `${openingType.charAt(0) + openingType.slice(1).toLowerCase()} #${typeNumber}`;
+
+                // Validate width
+                const widthRange = openingType === 'WINDOW' ? RANGES.windowWidth : RANGES.doorWidth;
+                const widthValidation = validateValue(widthField, width, widthRange, `${openingLabel} width`);
+                if (widthValidation !== true) {
+                    showWarning(widthValidation.message, widthField);
+                    return;
+                }
+
+                // Validate height
+                const heightRange = openingType === 'WINDOW' ? RANGES.windowHeight : RANGES.doorHeight;
+                const heightValidation = validateValue(heightField, height, heightRange, `${openingLabel} height`);
+                if (heightValidation !== true) {
+                    showWarning(heightValidation.message, heightField);
+                    return;
+                }
+            }
+
+            // Show loading
+            document.getElementById('warningBox').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+
+            // Collect form data
+            const formData = {
+                room: {
+                    width: roomWidth,
+                    length: roomLength,
+                    height: roomHeight
+                },
+                rollWidth: parseFloat(normalizeDecimal(document.getElementById('rollWidth').value)),
+                rollLength: parseFloat(normalizeDecimal(document.getElementById('rollLength').value)),
+                dropAllowance: parseFloat(normalizeDecimal(document.getElementById('dropAllowance').value)),
+                extraFactor: parseFloat(normalizeDecimal(document.getElementById('extraFactor').value)),
+                openings: []
+            };
+
+            // Collect openings data
+            for (let i = 0; i < openingKinds.length; i++) {
+                formData.openings.push({
+                    kind: openingKinds[i].value,
+                    width: parseFloat(normalizeDecimal(openingWidths[i].value)),
+                    height: parseFloat(normalizeDecimal(openingHeights[i].value))
+                });
+            }
+
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                document.getElementById('loading').style.display = 'none';
+
+                if (result.success) {
+                    showResult(result);
+                } else {
+                    showError(result.error || 'Calculation failed');
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                showError('Failed to connect to server: ' + error.message);
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Enable comma support for all number inputs
+            enableCommaSupport();
+
+            // Optionally add a default opening
+            // addOpening();
+        });
+    </script>
+</body>
+</html>
